@@ -43,9 +43,27 @@ C_RESET="\033[0m"
 echo -e "${C_ORANGE}=========================================="
 echo -e "      Welcome to Moodle Docker Setup"
 echo -e "==========================================${C_RESET}"
-echo "This is a basic install with some advanced options."
+echo "This is a basic Moodle install with some advanced options."
 echo -e "For full customization options, please see the README at ${C_UWHITE}https://github.com/moodlehq/moodle-docker.${C_RESET}"
 echo ""
+echo "Before we begin, make sure you have:"
+echo ""
+echo -e "    ${C_YELLOW}1. Docker installed"
+echo -e "    2. Docker Compose installed"
+echo -e "    3. Cloned the Moodle codebase"
+echo -e "    4. Checked out the Moodle branch you want to install${C_RESET}"
+echo ""
+# Confirmation prompt
+read -p "Okay to proceed? (Y/n): " confirm
+if [ -z "$confirm" ] || [[ "$confirm" =~ ^[Yy]$ ]]; then
+    echo ""
+elif [[ "$confirm" =~ ^[Nn]$ ]]; then
+    echo ""
+    echo "Installation cancelled."
+    exit 0
+else
+    echo "Please enter Y or n."
+fi
 
 # Step 2: Get Moodle codebase filepath
 echo -e "${C_BLUE}Step 1: Moodle Codebase Location"
