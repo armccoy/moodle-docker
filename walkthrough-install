@@ -1,62 +1,21 @@
 #!/usr/bin/env bash
 
-# TODO:
-# Use claude ai to generate the text-based UI using the steps and choices below
-# 1. Establish steps
-# 2. Establish choices for each step. Explain the purpose of each choice
-# 3. Allow things like setting defaults, alerting errors, etc.
-# 4. Run steps and alert errors
-# 5. Display a link to the browser URL to continue installation
-# 6. Make it look nice with colors and stuff
-
-<<plan
-Steps:
-Intro - Explain that this is a basic install with limited options. For full customization (including options for running Behat and phpunit tests), see the README at https://github.com/moodlehq/moodle-docker
-
-1. Get file path to Moodle codebase
-export MOODLE_DOCKER_WWWROOT=/path/to/moodle/code
-
-2. Choose DB type
-export MOODLE_DOCKER_DB=[pgsql, mariadb, mysql, mssql, oracle]
-
-3. Offer to set up advanced settings or proceed with defaults
-
-4. Choose DB port
-export MOODLE_DOCKER_DB_PORT=3351 [default to ????]
-
-5. Choose PHP version
-export MOODLE_DOCKER_PHP_VERSION=[get options from allowed moodle-docker-php-version list]
-- Check MOODLE_DOCKER_WWWROOT for PHP required version
-
-6. Choose web host
-export MOODLE_DOCKER_WEB_HOST=[] [default to localhost]
-
-7. Choose web port
-export MOODLE_DOCKER_WEB_PORT=XXXX [default to 8000]
-
-8. Choose project name
-export COMPOSE_PROJECT_NAME=moodleXX [default to dir name of MOODLE_DOCKER_WWWROOT]
-
-cp config.docker-template.php $MOODLE_DOCKER_WWWROOT/config.php
-
-bin/moodle-docker-compose up -d
-
-plan
-
+# Run basic install
 function basic_install() {
-    echo "Installing Moodle..."
+    echo -e "${C_GREEN}Installing Moodle...${C_RESET}"
     export MOODLE_DOCKER_WWWROOT=$moodle_path
     export MOODLE_DOCKER_DB=$database
     cp config.docker-template.php $moodle_path/config.php
     bin/moodle-docker-compose up -d
     echo ""
-    echo "You can now access your new Moodle instance at http://localhost:8000"
+    echo -e "You can now access your new Moodle instance at ${C_UWHITE}http://localhost:8000${C_RESET}"
     echo ""
     exit 0
 }
 
+# Run advanced install
 function advanced_install() {
-    echo "Installing Moodle..."
+    echo -e "${C_GREEN}Installing Moodle...${C_RESET}"
     export MOODLE_DOCKER_WWWROOT=$moodle_path
     export MOODLE_DOCKER_DB=$database
     export MOODLE_DOCKER_DB_PORT=$db_port
@@ -66,44 +25,44 @@ function advanced_install() {
     cp config.docker-template.php $moodle_path/config.php
     bin/moodle-docker-compose up -d
     echo ""
-    echo "You can now access your new Moodle instance at http://$web_host:$web_port"
+    echo -e "You can now access your new Moodle instance at ${C_UWHITE}http://$web_host:$web_port${C_RESET}"
     echo ""
     exit 0
 }
 
 # Set up colors
 C_RED="\033[0;31m"
-C_YELLOW="\033[0;33m"
-C_BLUE="\033[0;34m"
-C_PURPLE="\033[0;35m"
-C_CYAN="\033[0;36m"
-C_WHITE="\033[0;37m"
+C_ORANGE="\033[38;5;208m"
+C_YELLOW="\e[33m"
+C_BLUE="\033[38;5;080m"
 C_GREEN="\033[0;32m"
-C_RESET="$(tput sgr0)"
+C_UWHITE="\033[4;37m"
+C_RESET="\033[0m"
 
 # Step 1: Welcome message
-echo "=========================================="
-echo "Welcome to Moodle Docker Setup"
-echo "=========================================="
+echo -e "${C_ORANGE}=========================================="
+echo -e "      Welcome to Moodle Docker Setup"
+echo -e "==========================================${C_RESET}"
 echo "This is a basic install with some advanced options."
-echo "For full customization options, please see the README at https://github.com/moodlehq/moodle-docker."
+echo -e "For full customization options, please see the README at ${C_UWHITE}https://github.com/moodlehq/moodle-docker.${C_RESET}"
 echo ""
 
 # Step 2: Get Moodle codebase filepath
-echo "Step 1: Moodle Codebase Location"
-echo "---------------------------------"
+echo -e "${C_BLUE}Step 1: Moodle Codebase Location"
+echo -e "---------------------------------${C_RESET}"
 read -p "What is the filepath of your Moodle codebase? " moodle_path
 echo ""
 
 # Step 3: Database selection
-echo "Step 2: Database Selection"
-echo "--------------------------"
+echo -e "${C_BLUE}Step 2: Database Selection"
+echo -e "--------------------------${C_RESET}"
 echo "Which database would you like to use?"
-echo "1. pgsql"
-echo "2. mariadb"
-echo "3. mysql"
-echo "4. mssql"
-echo "5. oracle"
+echo ""
+echo -e "    ${C_YELLOW}1. pgsql"
+echo -e "    2. mariadb"
+echo -e "    3. mysql"
+echo -e "    4. mssql"
+echo -e "    5. oracle${C_RESET}"
 echo ""
 
 while true; do
@@ -121,11 +80,12 @@ echo "Selected database: $database"
 echo ""
 
 # Step 4: Basic or Advanced setup
-echo "Step 3: Installation Type"
-echo "-------------------------"
+echo -e "${C_BLUE}Step 3: Installation Type"
+echo -e "-------------------------${C_RESET}"
 echo "Would you like to:"
-echo "1. Proceed with basic installation"
-echo "2. Set up advanced settings"
+echo ""
+echo -e "    ${C_YELLOW}1. Proceed with basic installation"
+echo -e "    2. Set up advanced settings${C_RESET}"
 echo ""
 
 while true; do
@@ -141,11 +101,11 @@ echo ""
 # If basic install chosen, skip to installation
 if [ "$advanced_setup" = false ]; then
     # Step 10: Installation confirmation
-    echo "=========================================="
-    echo "Configuration Summary:"
-    echo "=========================================="
-    echo "Moodle Path: $moodle_path"
-    echo "Database: $database"
+    echo -e "${C_ORANGE}=========================================="
+    echo -e "          Configuration Summary:"
+    echo -e "==========================================${C_RESET}"
+    echo -e "    ${C_YELLOW}Moodle Path:${C_RESET} $moodle_path"
+    echo -e "    ${C_YELLOW}Database:${C_RESET} $database"
     echo ""
     # Confirmation prompt
     while true; do
@@ -164,12 +124,13 @@ if [ "$advanced_setup" = false ]; then
 fi
 
 # Step 5: Database port (Advanced settings)
-echo "Advanced Settings"
-echo "=================="
+echo -e "${C_ORANGE}=========================================="
+echo -e "            ${C_MORANGE}Advanced Settings"
+echo -e "==========================================${C_RESET}"
 echo ""
-echo "Step 4: Database Port"
-echo "---------------------"
-echo "TIP: Entering a non-standard database port allows multiple Moodle instances"
+echo -e "${C_BLUE}Step 4: Database Port"
+echo -e "---------------------${C_RESET}"
+echo -e "${C_GREEN}TIP:${C_RESET} Entering a non-standard database port allows multiple Moodle instances"
 echo "to each have their own database."
 echo ""
 
@@ -181,15 +142,16 @@ while true; do
     elif [[ "$db_port" =~ ^[0-9]+$ ]]; then
         break
     else
-        echo "Invalid input. Please enter numbers only."
+        echo -e "${C_RED}Invalid input. Please enter numbers only.${C_RESET}"
+        echo ""
     fi
 done
 echo "Database port set to: $db_port"
 echo ""
 
 # Step 7: Web host
-echo "Step 5: Web Host"
-echo "----------------"
+echo -e "${C_BLUE}Step 5: Web Host"
+echo -e "----------------${C_RESET}"
 read -p "Enter the web host (default: localhost): " web_host
 if [ -z "$web_host" ]; then
     web_host="localhost"
@@ -198,9 +160,9 @@ echo "Web host set to: $web_host"
 echo ""
 
 # Step 8: Web port
-echo "Step 6: Web Port"
-echo "----------------"
-echo "TIP: Entering a non-standard web port allows you to run multiple Moodle"
+echo -e "${C_BLUE}Step 6: Web Port"
+echo -e "----------------${C_RESET}"
+echo -e "${C_GREEN}TIP:${C_RESET} Entering a non-standard web port allows you to run multiple Moodle"
 echo "instances simultaneously. If set to '0', no web port will be used."
 echo ""
 
@@ -212,21 +174,22 @@ while true; do
     elif [[ "$web_port" =~ ^[0-9]+$ ]]; then
         break
     else
-        echo "Invalid input. Please enter numbers only."
+        echo -e "${C_RED}Invalid input. Please enter numbers only.${C_RESET}"
+        echo ""
     fi
 done
 echo "Web port set to: $web_port"
 echo ""
 
 # Step 9: Project name
-echo "Step 7: Project Name"
-echo "--------------------"
+echo -e "${C_BLUE}Step 7: Project Name"
+echo -e "--------------------${C_RESET}"
 echo "Choose the project name. This is the name that will appear for the project"
 echo "in the Docker dashboard. Project names must contain only lowercase letters,"
 echo "decimal digits, dashes, and underscores, and must begin with a lowercase"
 echo "letter or decimal digit."
 echo ""
-echo "TIP: Entering a unique project name allows you to run multiple Moodle"
+echo -e "${C_GREEN}TIP:${C_RESET} Entering a unique project name allows you to run multiple Moodle"
 echo "instances simultaneously."
 echo ""
 
@@ -238,23 +201,24 @@ while true; do
     elif [[ "$project_name" =~ ^[a-z0-9][a-z0-9_-]*$ ]]; then
         break
     else
-        echo "Invalid project name. Must contain only lowercase letters, digits,"
-        echo "dashes, and underscores, and must begin with a lowercase letter or digit."
+        echo -e "${C_RED}Invalid project name. Must contain only lowercase letters, digits,"
+        echo -e "dashes, and underscores, and must begin with a lowercase letter or digit.${C_RESET}"
+        echo ""
     fi
 done
 echo "Project name set to: $project_name"
 echo ""
 
 # Step 10: Installation confirmation
-echo "=========================================="
-echo "Configuration Summary:"
-echo "=========================================="
-echo "Moodle Path: $moodle_path"
-echo "Database: $database"
-echo "Database Port: $db_port"
-echo "Web Host: $web_host"
-echo "Web Port: $web_port"
-echo "Project Name: $project_name"
+echo -e "${C_ORANGE}=========================================="
+echo -e "          Configuration Summary:"
+echo -e "==========================================${C_RESET}"
+echo -e "    ${C_YELLOW}Moodle Path:${C_RESET} $moodle_path"
+echo -e "    ${C_YELLOW}Database:${C_RESET} $database"
+echo -e "    ${C_YELLOW}Database Port:${C_RESET} $db_port"
+echo -e "    ${C_YELLOW}Web Host:${C_RESET} $web_host"
+echo -e "    ${C_YELLOW}Web Port:${C_RESET} $web_port"
+echo -e "    ${C_YELLOW}Project Name:${C_RESET} $project_name"
 echo ""
 
 # Confirmation prompt
