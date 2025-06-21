@@ -35,7 +35,7 @@ function advanced_install() {
 # Set up colors
 C_RED="\033[0;31m"
 C_ORANGE="\033[38;5;208m"
-C_YELLOW="\e[33m"
+C_YELLOW="\033[33m"
 C_BLUE="\033[38;5;080m"
 C_GREEN="\033[0;32m"
 C_UWHITE="\033[4;37m"
