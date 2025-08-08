@@ -231,7 +231,30 @@ done
 echo "Project name set to: $project_name"
 echo ""
 
-# Step 10: Installation confirmation
+# Step 10: Developer plugins
+echo -e "${C_BLUE}Step 8: Developer Plugins"
+echo -e "--------------------${C_RESET}"
+echo "Would you like to install some recommended developer plugins? These tools"
+echo "can help you with tasks such as checking your code for compliance with"
+echo "Moodle formatting rules, proper PHP documentation content, and quickly"
+echo "starting new plugin development."
+echo ""
+
+while true; do
+    read -p "Choose developer plugins? (Y/n): " confirm
+    if [ -z "$confirm" ] || [[ "$confirm" =~ ^[Yy]$ ]]; then
+        echo ""
+        echo "[CHOOSE PLUGINS]"
+        break
+    elif [[ "$confirm" =~ ^[Nn]$ ]]; then
+        break
+    else
+        echo "Please enter Y or n."
+    fi
+done
+echo ""
+
+# Step 11: Installation confirmation
 echo -e "${C_ORANGE}=========================================="
 echo -e "          Configuration Summary:"
 echo -e "==========================================${C_RESET}"
