@@ -19,6 +19,14 @@ function basic_install() {
 
 # Run advanced install
 function advanced_install() {
+    moodle_path=$1
+    database=$2
+    db_port=$3
+    web_host=$4
+    web_port=$5
+    project_name=$6
+    selected_plugins=$7
+
     echo -e "${C_GREEN}Installing Moodle...${C_RESET}"
     export MOODLE_DOCKER_WWWROOT=$moodle_path
     export MOODLE_DOCKER_DB=$database
@@ -29,6 +37,22 @@ function advanced_install() {
     cp config.docker-template.php $moodle_path/config.php
     bin/moodle-docker-compose up -d
     echo ""
+
+    # Install selected developer plugins
+    for plugin in $selected_plugins; do
+        case $plugin in
+            codechk)
+                git clone https://github.com/moodlehq/moodle-local_codechecker.git $moodle_path/local/codechecker
+                ;;
+            phpdocchk)
+                git clone https://github.com/moodlehq/moodle-local_moodlecheck.git $moodle_path/local/moodlecheck
+                ;;
+            pluginskel)
+                git clone https://github.com/mudrd8mz/moodle-tool_pluginskel.git $moodle_path/admin/tool/pluginskel
+                ;;
+        esac
+    done
+
     echo -e "You can now access your new Moodle instance at ${C_UWHITE}http://$web_host:$web_port${C_RESET}"
     echo ""
     exit 0
@@ -42,6 +66,8 @@ C_BLUE="\033[38;5;080m"
 C_GREEN="\033[0;32m"
 C_UWHITE="\033[4;37m"
 C_RESET="\033[0m"
+C_PF_YELLOW='\e[0;33m'
+C_PF_RESET='\e[0m'
 
 # Step 1: Welcome message
 echo -e "${C_ORANGE}=========================================="
@@ -122,14 +148,12 @@ echo ""
 
 # If basic install chosen, skip to installation
 if [ "$advanced_setup" = false ]; then
-    # Step 10: Installation confirmation
     echo -e "${C_ORANGE}=========================================="
     echo -e "          Configuration Summary:"
     echo -e "==========================================${C_RESET}"
     echo -e "    ${C_YELLOW}Moodle Path:${C_RESET} $moodle_path"
     echo -e "    ${C_YELLOW}Database:${C_RESET} $database"
     echo ""
-    # Confirmation prompt
     while true; do
         read -p "Proceed with basic installation? (Y/n): " confirm
         if [ -z "$confirm" ] || [[ "$confirm" =~ ^[Yy]$ ]]; then
@@ -147,7 +171,7 @@ fi
 
 # Step 5: Database port (Advanced settings)
 echo -e "${C_ORANGE}=========================================="
-echo -e "            ${C_MORANGE}Advanced Settings"
+echo -e "            Advanced Settings"
 echo -e "==========================================${C_RESET}"
 echo ""
 echo -e "${C_BLUE}Step 4: Database Port"
@@ -231,25 +255,67 @@ done
 echo "Project name set to: $project_name"
 echo ""
 
-# Step 10: Developer plugins
+# Step 10: Developer plugins (manual selector)
 echo -e "${C_BLUE}Step 8: Developer Plugins"
 echo -e "--------------------${C_RESET}"
-echo "Would you like to install some recommended developer plugins? These tools"
-echo "can help you with tasks such as checking your code for compliance with"
-echo "Moodle formatting rules, proper PHP documentation content, and quickly"
-echo "starting new plugin development."
+echo "Would you like to pre-install some recommended developer plugins?"
 echo ""
 
 while true; do
     read -p "Choose developer plugins? (Y/n): " confirm
     if [ -z "$confirm" ] || [[ "$confirm" =~ ^[Yy]$ ]]; then
-        echo ""
-        echo "[CHOOSE PLUGINS]"
+        # Interactive plugin selection (arrow keys + spacebar)
+        choose_plugins() {
+            local options=(
+                "codechk|Code Checker|Checks PHP files for Moodle coding style compliance"
+                "phpdocchk|Moodle PHPdoc Check|Checks for proper phpdoc content and formatting"
+                "pluginskel|Moodle Plugin Skeleton Generator|Quickly generates code skeleton for a new Moodle plugin"
+            )
+            local selected=()
+            local cursor=0
+            local key
+            while true; do
+                clear
+                echo -e "${C_GREEN}Use ↑/↓ to move, SPACE to toggle selection, ENTER to confirm.${C_RESET}"
+                echo
+                for i in "${!options[@]}"; do
+                    IFS="|" read -r key name desc <<< "${options[$i]}"
+                    if [[ $i -eq $cursor ]]; then printf "> "; else printf "  "; fi
+                    if [[ " ${selected[*]} " == *" $key "* ]]; then
+                        printf "${C_PF_YELLOW}[${C_PF_RESET}x${C_PF_YELLOW}] %s${C_PF_RESET} - %s\n" "$name" "$desc"
+                    else
+                        printf "${C_PF_YELLOW}[ ] %s${C_PF_RESET} - %s\n" "$name" "$desc"
+                    fi
+                done
+                IFS= read -rsn1 key
+                if [[ $key == $'\x1b' ]]; then
+                    read -rsn2 key
+                    case $key in
+                        "[A") ((cursor--));;
+                        "[B") ((cursor++));;
+                    esac
+                    ((cursor < 0)) && cursor=$((${#options[@]} - 1))
+                    ((cursor >= ${#options[@]})) && cursor=0
+                elif [[ $key == " " ]]; then
+                    IFS="|" read -r keycode _ <<< "${options[$cursor]}"
+                    if [[ " ${selected[*]} " == *" $keycode "* ]]; then
+                        selected=(${selected[@]//$keycode})
+                    else
+                        selected+=("$keycode")
+                    fi
+                elif [[ $key == "" ]]; then
+                    break
+                fi
+            done
+            SELECTED_PLUGINS="${selected[*]}"
+        }
+        choose_plugins
         break
     elif [[ "$confirm" =~ ^[Nn]$ ]]; then
+        SELECTED_PLUGINS=""
         break
     else
-        echo "Please enter Y or n."
+        echo -e "${C_RED}Please enter Y or n.${C_RESET}"
     fi
 done
 echo ""
@@ -264,20 +330,19 @@ echo -e "    ${C_YELLOW}Database Port:${C_RESET} $db_port"
 echo -e "    ${C_YELLOW}Web Host:${C_RESET} $web_host"
 echo -e "    ${C_YELLOW}Web Port:${C_RESET} $web_port"
 echo -e "    ${C_YELLOW}Project Name:${C_RESET} $project_name"
+echo -e "    ${C_YELLOW}Selected Plugins:${C_RESET} $SELECTED_PLUGINS"
 echo ""
 
-# Confirmation prompt
 while true; do
     read -p "Proceed with advanced installation? (Y/n): " confirm
     if [ -z "$confirm" ] || [[ "$confirm" =~ ^[Yy]$ ]]; then
         echo ""
-        advanced_install $moodle_path $database $db_port $web_host $web_port $project_name
+        advanced_install $moodle_path $database $db_port $web_host $web_port $project_name "$SELECTED_PLUGINS"
     elif [[ "$confirm" =~ ^[Nn]$ ]]; then
         echo ""
         echo "Installation cancelled."
         exit 0
     else
-        echo "Please enter Y or n."
+        echo -e "${C_RED}Please enter Y or n.${C_RESET}"
     fi
 done
-
