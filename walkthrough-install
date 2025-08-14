@@ -80,8 +80,9 @@ echo "Before we begin, make sure you have:"
 echo ""
 echo -e "    ${C_YELLOW}1. Docker installed"
 echo -e "    2. Docker Compose installed"
-echo -e "    3. Cloned the Moodle codebase"
-echo -e "    4. Checked out the Moodle branch you want to install${C_RESET}"
+echo -e "    3. Git installed"
+echo -e "    4. Cloned the Moodle codebase"
+echo -e "    5. Checked out the Moodle branch you want to install${C_RESET}"
 echo ""
 # Confirmation prompt
 read -p "Okay to proceed? (Y/n): " confirm
