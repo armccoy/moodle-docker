@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
 
-# TODO: 
-# - Add 'bin/moodle-docker-wait-for-db' in case of Oracle or MSSQL
-# - Add option to install recommended developer plugins (code checker, PHPdoc check, plugin skeleton, etc.)
-
 # Run basic install
 function basic_install() {
     echo -e "${C_GREEN}Installing Moodle...${C_RESET}"
@@ -56,6 +52,31 @@ function advanced_install() {
     echo -e "You can now access your new Moodle instance at ${C_UWHITE}http://$web_host:$web_port${C_RESET}"
     echo ""
     exit 0
+}
+
+# Function to convert plugin keys to names
+function get_plugin_names() {
+    local keys="$1"
+    local names=()
+    local options=(
+        "codechk|Code Checker|Checks PHP files for Moodle coding style compliance"
+        "phpdocchk|Moodle PHPdoc Check|Checks for proper phpdoc content and formatting"
+        "pluginskel|Moodle Plugin Skeleton Generator|Quickly generates code skeleton for a new Moodle plugin"
+    )
+
+    for key in $keys; do
+        for option in "${options[@]}"; do
+            IFS="|" read -r option_key option_name option_desc <<< "$option"
+            if [[ "$option_key" == "$key" ]]; then
+                names+=(" $option_name")
+                break
+            fi
+        done
+    done
+
+    # Join names with comma and space
+    local IFS=", "
+    echo "${names[*]}"
 }
 
 # Set up colors
@@ -331,7 +352,14 @@ echo -e "    ${C_YELLOW}Database Port:${C_RESET} $db_port"
 echo -e "    ${C_YELLOW}Web Host:${C_RESET} $web_host"
 echo -e "    ${C_YELLOW}Web Port:${C_RESET} $web_port"
 echo -e "    ${C_YELLOW}Project Name:${C_RESET} $project_name"
-echo -e "    ${C_YELLOW}Selected Plugins:${C_RESET} $SELECTED_PLUGINS"
+
+# Convert plugin keys to names for display
+if [ -n "$SELECTED_PLUGINS" ]; then
+    PLUGIN_NAMES=$(get_plugin_names "$SELECTED_PLUGINS")
+    echo -e "    ${C_YELLOW}Selected Plugins:${C_RESET}$PLUGIN_NAMES"
+else
+    echo -e "    ${C_YELLOW}Selected Plugins:${C_RESET} None"
+fi
 echo ""
 
 while true; do
