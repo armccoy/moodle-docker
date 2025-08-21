@@ -120,7 +120,15 @@ fi
 # Step 2: Get Moodle codebase filepath
 echo -e "${C_BLUE}Step 1: Moodle Codebase Location"
 echo -e "---------------------------------${C_RESET}"
-read -p "What is the filepath of your Moodle codebase? " moodle_path
+moodle_path=""
+while [[ -z "$moodle_path" ]]; do
+  read -p "What is the filepath of your Moodle codebase? " moodle_path
+  if [[ -z "$moodle_path" ]]; then
+    echo "Moodle filepath cannot be blank."
+    echo ""
+  fi
+done
+echo "Moodle filepath: $moodle_path"
 echo ""
 
 # Step 3: Database selection
