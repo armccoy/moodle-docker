@@ -21,7 +21,8 @@ function advanced_install() {
     web_host=$4
     web_port=$5
     project_name=$6
-    selected_plugins=$7
+    vnc_port=$7
+    selected_plugins=$8
 
     echo -e "${C_GREEN}Installing Moodle...${C_RESET}"
     export MOODLE_DOCKER_WWWROOT=$moodle_path
@@ -30,6 +31,9 @@ function advanced_install() {
     export MOODLE_DOCKER_WEB_HOST=$web_host
     export MOODLE_DOCKER_WEB_PORT=$web_port
     export COMPOSE_PROJECT_NAME=$project_name
+    if [ -n "$vnc_port" ]; then
+        export MOODLE_DOCKER_SELENIUM_VNC_PORT=$vnc_port
+    fi
     cp config.docker-template.php $moodle_path/config.php
     bin/moodle-docker-compose up -d
     echo ""
@@ -285,8 +289,44 @@ done
 echo "Project name set to: $project_name"
 echo ""
 
-# Step 10: Developer plugins (manual selector)
-echo -e "${C_BLUE}Step 8: Developer Plugins"
+# Step 10: VNC Port
+echo -e "${C_BLUE}Step 8: VNC Port"
+echo -e "--------------------${C_RESET}"
+echo "If the VNC port is defined, selenium will expose a VNC session on the port"
+echo "specified so behat tests can be viewed in progress."
+echo ""
+echo -e "${C_YELLOW}NOTE:${C_RESET} Make sure NOT to use the same port number as the web port or DB port."
+echo ""
+while true; do
+    read -p "Would you like to use VNC for behat tests? (Y/n): " confirm
+    if [ -z "$confirm" ] || [[ "$confirm" =~ ^[Yy]$ ]]; then
+        echo ""
+        while true; do
+            read -p "Enter the VNC port (default: 5900): " vnc_port
+            if [ -z "$vnc_port" ]; then
+                vnc_port="5900"
+                break
+            elif [[ "$vnc_port" =~ ^[0-9]+$ ]]; then
+                break
+            else
+                echo -e "${C_RED}Invalid input. Please enter numbers only.${C_RESET}"
+                echo ""
+            fi
+        done
+        echo "VNC port set to: $vnc_port"
+        echo ""
+        break
+    elif [[ "$confirm" =~ ^[Nn]$ ]]; then
+        vnc_port=""
+        echo ""
+        break
+    else
+        echo "Please enter Y or n."
+    fi
+done
+
+# Step 11: Developer plugins (manual selector)
+echo -e "${C_BLUE}Step 9: Developer Plugins"
 echo -e "--------------------${C_RESET}"
 echo "Would you like to pre-install some recommended developer plugins?"
 echo ""
@@ -360,6 +400,9 @@ echo -e "    ${C_YELLOW}Database Port:${C_RESET} $db_port"
 echo -e "    ${C_YELLOW}Web Host:${C_RESET} $web_host"
 echo -e "    ${C_YELLOW}Web Port:${C_RESET} $web_port"
 echo -e "    ${C_YELLOW}Project Name:${C_RESET} $project_name"
+if [ -n "$vnc_port" ]; then
+    echo -e "    ${C_YELLOW}VNC Port:${C_RESET} $vnc_port"
+fi
 
 # Convert plugin keys to names for display
 if [ -n "$SELECTED_PLUGINS" ]; then
@@ -374,7 +417,7 @@ while true; do
     read -p "Proceed with advanced installation? (Y/n): " confirm
     if [ -z "$confirm" ] || [[ "$confirm" =~ ^[Yy]$ ]]; then
         echo ""
-        advanced_install $moodle_path $database $db_port $web_host $web_port $project_name "$SELECTED_PLUGINS"
+        advanced_install $moodle_path $database $db_port $web_host $web_port $project_name $vnc_port "$SELECTED_PLUGINS"
     elif [[ "$confirm" =~ ^[Nn]$ ]]; then
         echo ""
         echo "Installation cancelled."
