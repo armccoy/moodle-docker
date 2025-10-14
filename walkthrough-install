@@ -167,7 +167,7 @@ echo -e "-------------------------${C_RESET}"
 echo "Would you like to:"
 echo ""
 echo -e "    ${C_YELLOW}1. Proceed with basic installation"
-echo -e "    2. Set up advanced settings${C_RESET}"
+echo -e "    2. Set up advanced settings (ports, host, developer plugins, etc.)${C_RESET}"
 echo ""
 
 while true; do
